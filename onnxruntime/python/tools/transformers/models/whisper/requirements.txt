@@ -1,5 +1,5 @@
-torch>=1.13.0
-transformers>=4.24.0
+torch>=2.2.0
+transformers>=4.38.0
 openai-whisper
 datasets
 soundfile
@@ -11,3 +11,8 @@ protobuf==3.20.2
 numpy==1.23.3
 psutil
 py3nvml
+aiohttp>=3.9.4 # not directly required, pinned by Snyk to avoid a vulnerability
+pyarrow>=14.0.1 # not directly required, pinned by Snyk to avoid a vulnerability
+setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
+sympy>=1.12 # not directly required, pinned by Snyk to avoid a vulnerability
+wheel>=0.38.0 # not directly required, pinned by Snyk to avoid a vulnerability
