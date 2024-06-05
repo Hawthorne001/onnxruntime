@@ -1,4 +1,4 @@
-numpy==1.21.6 ; python_version < '3.11'
+numpy==1.22.2 ; python_version < '3.11'
 numpy==1.24.2 ; python_version == '3.11'
 numpy==1.26.0 ; python_version >= '3.12'
 mypy
@@ -11,3 +11,6 @@ sympy==1.12
 flatbuffers
 neural-compressor>=2.2.1
 triton
+fonttools>=4.43.0 # not directly required, pinned by Snyk to avoid a vulnerability
+pillow>=10.3.0 # not directly required, pinned by Snyk to avoid a vulnerability
+requests>=2.32.0 # not directly required, pinned by Snyk to avoid a vulnerability
