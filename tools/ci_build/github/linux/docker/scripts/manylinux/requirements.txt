@@ -11,3 +11,4 @@ sympy==1.12
 flatbuffers
 neural-compressor>=2.2.1
 triton
+scikit-learn>=1.5.0 # not directly required, pinned by Snyk to avoid a vulnerability
