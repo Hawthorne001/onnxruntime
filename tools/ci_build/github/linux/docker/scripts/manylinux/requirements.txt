@@ -11,3 +11,4 @@ sympy==1.12
 flatbuffers
 neural-compressor>=2.2.1
 triton
+zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
