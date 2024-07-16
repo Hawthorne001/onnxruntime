@@ -8,3 +8,4 @@ coloredlogs==15.0
 transformers==4.38.0
 psutil
 einops
+setuptools>=70.0.0 # not directly required, pinned by Snyk to avoid a vulnerability
