@@ -4,4 +4,4 @@ torch==2.1.0+cu121
 torchvision==0.16.0+cu121
 torchtext==0.16.0
 packaging==23.1
-setuptools>=68.2.2
+setuptools>=70.0.0
