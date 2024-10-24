@@ -56,6 +56,7 @@ struct DMLProviderFactory : IExecutionProviderFactory {
       python_api_(python_api) {
     graph_capture_enabled_ = ConfigValueIsTrue(config_options.GetConfigOrDefault(kOrtSessionOptionsConfigEnableGraphCapture, "0"));
     cpu_sync_spinning_enabled_ = ConfigValueIsTrue(config_options.GetConfigOrDefault(kOrtSessionOptionsConfigEnableCpuSyncSpinning, "0"));
+    disable_memory_arena_ = ConfigValueIsTrue(config_options.GetConfigOrDefault(kOrtSessionOptionsConfigDisableMemoryArena, "0"));
   }
 
   ~DMLProviderFactory() override {}
@@ -70,6 +71,7 @@ struct DMLProviderFactory : IExecutionProviderFactory {
   bool metacommands_enabled_ = true;
   bool graph_capture_enabled_ = false;
   bool cpu_sync_spinning_enabled_ = false;
+  bool disable_memory_arena_ = false;
   bool python_api_ = false;
 };
 
@@ -84,14 +86,14 @@ std::unique_ptr<IExecutionProvider> DMLProviderFactory::CreateProvider() {
 
     // First, check if an I/O binding API that was used before this session or another session has already created a queue
     if (FAILED(d3d12_device->GetPrivateData(dml_execution_context_guid, &execution_context_ptr_size, execution_context.GetAddressOf()))) {
-      execution_context = wil::MakeOrThrow<Dml::ExecutionContext>(d3d12_device.Get(), dml_device_.Get(), cmd_queue_.Get(), true, true);
+      execution_context = wil::MakeOrThrow<Dml::ExecutionContext>(d3d12_device.Get(), dml_device_.Get(), cmd_queue_.Get(), true);
       ORT_THROW_IF_FAILED(d3d12_device->SetPrivateDataInterface(dml_execution_context_guid, execution_context.Get()));
     }
   } else {
-    execution_context = wil::MakeOrThrow<Dml::ExecutionContext>(d3d12_device.Get(), dml_device_.Get(), cmd_queue_.Get(), cpu_sync_spinning_enabled_, false);
+    execution_context = wil::MakeOrThrow<Dml::ExecutionContext>(d3d12_device.Get(), dml_device_.Get(), cmd_queue_.Get(), cpu_sync_spinning_enabled_);
   }
 
-  auto provider = Dml::CreateExecutionProvider(dml_device_.Get(), execution_context.Get(), metacommands_enabled_, graph_capture_enabled_, cpu_sync_spinning_enabled_);
+  auto provider = Dml::CreateExecutionProvider(dml_device_.Get(), execution_context.Get(), metacommands_enabled_, graph_capture_enabled_, cpu_sync_spinning_enabled_, disable_memory_arena_);
   return provider;
 }
 
@@ -543,6 +545,7 @@ static D3D12_COMMAND_LIST_TYPE CalculateCommandListType(ID3D12Device* d3d12_devi
       ));
 
   auto use_compute_command_list = (feature_levels.MaxSupportedFeatureLevel <= D3D_FEATURE_LEVEL_1_0_CORE);
+
   if (use_compute_command_list)
   {
     return D3D12_COMMAND_LIST_TYPE_COMPUTE;

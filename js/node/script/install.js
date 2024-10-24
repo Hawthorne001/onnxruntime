@@ -21,13 +21,15 @@ const os = require('os');
 const fs = require('fs');
 const path = require('path');
 const tar = require('tar');
-const {Readable} = require('stream');
+const { Readable } = require('stream');
 
 // commandline flag:
 // --onnxruntime-node-install-cuda         Force install the CUDA EP binaries. Try to detect the CUDA version.
 // --onnxruntime-node-install-cuda=v11     Force install the CUDA EP binaries for CUDA 11.
 // --onnxruntime-node-install-cuda=v12     Force install the CUDA EP binaries for CUDA 12.
 // --onnxruntime-node-install-cuda=skip    Skip the installation of the CUDA EP binaries.
+//
+// Alternatively, use environment variable "ONNXRUNTIME_NODE_INSTALL_CUDA"
 //
 // If the flag is not provided, the script will only install the CUDA EP binaries when:
 // - The platform is Linux/x64.
@@ -47,7 +49,7 @@ const ORT_VERSION = require('../package.json').version;
 const npm_config_local_prefix = process.env.npm_config_local_prefix;
 const npm_package_json = process.env.npm_package_json;
 const SKIP_LOCAL_INSTALL =
-    npm_config_local_prefix && npm_package_json && path.dirname(npm_package_json) === npm_config_local_prefix;
+  npm_config_local_prefix && npm_package_json && path.dirname(npm_package_json) === npm_config_local_prefix;
 
 const shouldInstall = FORCE_INSTALL || (!SKIP_LOCAL_INSTALL && IS_LINUX_X64 && BIN_FOLDER_EXISTS && !CUDA_DLL_EXISTS);
 if (NO_INSTALL || !shouldInstall) {
@@ -57,12 +59,14 @@ if (NO_INSTALL || !shouldInstall) {
 // Step.2: Download the required binaries
 const artifactUrl = {
   11: `https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/onnxruntime-linux-x64-gpu-${
-      ORT_VERSION}.tgz`,
-  12: `https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/onnxruntime-linux-x64-cuda12-${
-      ORT_VERSION}.tgz`
+    ORT_VERSION
+  }.tgz`,
+  12: `https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/onnxruntime-linux-x64-gpu-cuda12-${
+    ORT_VERSION
+  }.tgz`,
 }[INSTALL_CUDA_FLAG || tryGetCudaVersion()];
 console.log(`Downloading "${artifactUrl}"...`);
-fetch(artifactUrl).then(res => {
+fetch(artifactUrl).then((res) => {
   if (!res.ok) {
     throw new Error(`Failed to download the binaries: ${res.status} ${res.statusText}.
 
@@ -79,22 +83,27 @@ Use "--onnxruntime-node-install-cuda=skip" to skip the installation. You will st
   ]);
 
   Readable.fromWeb(res.body)
-      .pipe(tar.t())
-      .on('entry',
-          (entry) => {
-            const filename = path.basename(entry.path);
-            if (entry.type === 'File' && FILES.has(filename)) {
-              console.log(`Extracting "${filename}" to "${BIN_FOLDER}"...`);
-              entry.pipe(fs.createWriteStream(path.join(BIN_FOLDER, filename)));
-            }
-          })
-      .on('error', (err) => {
-        throw new Error(`Failed to extract the binaries: ${err.message}.
+    .pipe(
+      tar.t({
+        strict: true,
+        onentry: (entry) => {
+          const filename = path.basename(entry.path);
+          if (entry.type === 'File' && FILES.has(filename)) {
+            console.log(`Extracting "${filename}" to "${BIN_FOLDER}"...`);
+            entry.pipe(fs.createWriteStream(path.join(BIN_FOLDER, filename)));
+            entry.on('finish', () => {
+              console.log(`Finished extracting "${filename}".`);
+            });
+          }
+        },
+      }),
+    )
+    .on('error', (err) => {
+      throw new Error(`Failed to extract the binaries: ${err.message}.
 
 Use "--onnxruntime-node-install-cuda=skip" to skip the installation. You will still be able to use ONNX Runtime, but the CUDA EP will not be available.`);
-      });
+    });
 });
-
 
 function tryGetCudaVersion() {
   // Should only return 11 or 12.
@@ -105,7 +114,7 @@ function tryGetCudaVersion() {
 }
 
 function parseInstallCudaFlag() {
-  let flag = process.env.npm_config_onnxruntime_node_install_cuda;
+  let flag = process.env.ONNXRUNTIME_NODE_INSTALL_CUDA || process.env.npm_config_onnxruntime_node_install_cuda;
   if (!flag) {
     for (let i = 0; i < process.argv.length; i++) {
       if (process.argv[i].startsWith('--onnxruntime-node-install-cuda=')) {
@@ -118,6 +127,8 @@ function parseInstallCudaFlag() {
   }
   switch (flag) {
     case 'true':
+    case '1':
+    case 'ON':
       return tryGetCudaVersion();
     case 'v11':
       return 11;

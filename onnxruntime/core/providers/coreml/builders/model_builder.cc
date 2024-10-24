@@ -641,6 +641,14 @@ std::string_view ModelBuilder::AddConstantImpl(std::string_view op_type, std::st
 
 template <>
 std::string_view ModelBuilder::AddConstantImpl(std::string_view op_type, std::string_view value_type,
+                                               gsl::span<const MLFloat16> value,
+                                               std::optional<gsl::span<const int64_t>> shape) {
+  auto input_value = CreateTensorValue<MLFloat16>(value, shape);
+  return AddTensorValueAsConstantOperation(op_type, value_type, std::move(input_value));
+}
+
+template <>
+std::string_view ModelBuilder::AddConstantImpl(std::string_view op_type, std::string_view value_type,
                                                gsl::span<const int64_t> value,
                                                std::optional<gsl::span<const int64_t>> shape) {
   auto input_value = CreateTensorValue<int64_t, int32_t>(value, shape);  // CoreML uses int32
@@ -811,6 +819,9 @@ Status ModelBuilder::RegisterModelInputOutput(const NodeArg& node_arg, bool is_i
       case ONNX_NAMESPACE::TensorProto_DataType_FLOAT:
         multi_array->set_datatype(ArrayFeatureType::FLOAT32);
         break;
+      case ONNX_NAMESPACE::TensorProto_DataType_FLOAT16:
+        multi_array->set_datatype(ArrayFeatureType::FLOAT16);
+        break;
       case ONNX_NAMESPACE::TensorProto_DataType_INT32:
         multi_array->set_datatype(ArrayFeatureType::INT32);
         break;
@@ -838,13 +849,15 @@ Status ModelBuilder::RegisterModelInputOutput(const NodeArg& node_arg, bool is_i
   if (create_ml_program_) {
     if (is_input) {
       // the model inputs need to be wired up as args to the 'main' function.
-      auto tensor_value_type = CreateNamedTensorValueType(node_arg);
-      tensor_value_type.set_name(name);
-      if (node_arg.Shape()->dim_size() == 0) {
-        // update shape from {} to {1} (same change we made at the model input level above).
-        tensor_value_type.mutable_type()->mutable_tensortype()->set_rank(1);
-        tensor_value_type.mutable_type()->mutable_tensortype()->add_dimensions()->mutable_constant()->set_size(1);
+      auto tensor_value_type = CreateNamedTensorValueType(node_arg, /*convert_scalar*/ true);
+
+      // we need to convert int64 to int32 here as well
+      if (data_type == ONNX_NAMESPACE::TensorProto_DataType_INT64) {
+        tensor_value_type.mutable_type()->mutable_tensortype()->set_datatype(
+            OnnxDataTypeToMILSpec(ONNX_NAMESPACE::TensorProto_DataType_INT32));
       }
+
+      tensor_value_type.set_name(name);
 
       mlprogram_main_fn_->mutable_inputs()->Add(std::move(tensor_value_type));
     } else {
@@ -911,6 +924,7 @@ Status ModelBuilder::SaveModel() {
 
 #if defined(COREML_ENABLE_MLPROGRAM)
   if (create_ml_program_) {
+    // we need to jump through some hoops to get the model path the ML Program load wants.
     std::string tmp_model_path = model_output_path_ + "/tmp/model.mlmodel";
     CreateEmptyFile(tmp_model_path);
 

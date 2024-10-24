@@ -1,3 +1,4 @@
+#!/bin/bash
 # -------------------------------------------------------------------------
 # Copyright (c) Microsoft Corporation.  All rights reserved.
 # Licensed under the MIT License.  See License.txt in the project root for
@@ -62,7 +63,7 @@ input_counts=1
 # Pretrained transformers models can be a subset of: bert-base-cased roberta-base gpt2 distilgpt2 distilbert-base-uncased
 models_to_test="bert-base-cased roberta-base distilbert-base-uncased"
 
-# If you have mutliple GPUs, you can choose one GPU for test. Here is an example to use the second GPU:
+# If you have multiple GPUs, you can choose one GPU for test. Here is an example to use the second GPU:
 # export CUDA_VISIBLE_DEVICES=1
 
 # This script will generate a logs file with a list of commands used in tests.
@@ -91,7 +92,6 @@ fi
 
 
 if [ "$run_install" = true ] ; then
-  pip uninstall --yes ort-nightly ort-gpu-nightly
   pip uninstall --yes onnxruntime
   pip uninstall --yes onnxruntime-gpu
   if [ "$run_cpu_fp32" = true ] || [ "$run_cpu_int8" = true ]; then
