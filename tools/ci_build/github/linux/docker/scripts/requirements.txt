@@ -10,3 +10,4 @@ sympy==1.14
 flatbuffers
 protobuf==4.25.1
 packaging
+zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
