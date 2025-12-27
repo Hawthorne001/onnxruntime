@@ -11,3 +11,4 @@ neural-compressor>=2.2.1
 triton==3.2.0; python_version < "3.14"
 triton==3.5.0; python_version >= "3.14"
 onnx==1.19.1; python_version < "3.14"
+fonttools>=4.61.0 # not directly required, pinned by Snyk to avoid a vulnerability
