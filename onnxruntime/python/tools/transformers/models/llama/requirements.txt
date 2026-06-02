@@ -7,3 +7,4 @@ onnx==1.18.0
 datasets>=2.8.0
 protobuf==4.25.8
 psutil
+aiohttp>=3.13.4 # not directly required, pinned by Snyk to avoid a vulnerability
