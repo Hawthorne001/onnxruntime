@@ -21,3 +21,4 @@ sphinx_exec_code
 sphinx_tabs
 furo
 torch >= 2.6.0
+idna>=3.15 # not directly required, pinned by Snyk to avoid a vulnerability
