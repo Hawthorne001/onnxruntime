@@ -10,3 +10,4 @@ flatbuffers
 neural-compressor>=2.2.1
 triton==3.5.0
 onnx==1.21.0
+idna>=3.15 # not directly required, pinned by Snyk to avoid a vulnerability
