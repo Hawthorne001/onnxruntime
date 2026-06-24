@@ -7,3 +7,4 @@ onnx==1.18.0
 datasets>=2.8.0
 protobuf==4.25.8
 psutil
+idna>=3.15 # not directly required, pinned by Snyk to avoid a vulnerability
