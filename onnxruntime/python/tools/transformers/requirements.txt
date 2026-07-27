@@ -11,3 +11,4 @@ pillow
 
 # please follow https://pytorch.org/ to install PyTorch for your OS
 torch >= 2.6.0
+idna>=3.15 # not directly required, pinned by Snyk to avoid a vulnerability
