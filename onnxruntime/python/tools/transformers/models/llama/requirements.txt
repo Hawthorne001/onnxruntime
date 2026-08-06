@@ -7,3 +7,4 @@ onnx==1.22.0
 datasets>=2.8.0
 protobuf==6.33.5
 psutil
+zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
