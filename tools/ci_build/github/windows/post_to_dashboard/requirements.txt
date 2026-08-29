@@ -1,2 +1,4 @@
 azure-kusto-data[pandas]==4.5.1
 azure-kusto-ingest[pandas]==4.5.1
+idna>=3.15 # not directly required, pinned by Snyk to avoid a vulnerability
+pyjwt>=2.11.0 # not directly required, pinned by Snyk to avoid a vulnerability
